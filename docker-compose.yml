@@ -1,0 +1,129 @@
+
+version: "2.0"
+services:
+
+  ########################### DATABASES #############################
+
+
+
+  mongo:
+    image: mongo:latest
+    hostname: sthmongo
+    container_name: sthmongo
+    restart: always
+    expose:
+      - "27017"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_db:/data/db
+    logging:
+      options:
+        max-size: 50m
+
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    restart: always
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+    logging:
+      options:
+        max-size: 50m
+
+  ########################### Fiware GEs #############################
+  orion:
+    image: fiware/orion:latest
+    hostname: orion
+    container_name: orion
+    restart: always
+    links:
+      - mongo
+    expose:
+      - "1026"
+    ports:
+      - "9000:1026"
+    command: -dbhost sthmongo -logLevel WARN -statCounters -statNotifQueue -corsOrigin __ALL -corsMaxAge 600
+    logging:
+      options:
+        max-size: 50m
+
+
+  cygnus:
+    image: fiware/cygnus-ngsi:2.4.0 #2.3.0 worked
+    hostname: cygnus
+    container_name: cygnus
+    restart: always
+    links:
+      - orion
+      - mysql:iot-mysql
+      - mongo
+    expose:
+      - "5050"
+    volumes:
+      - ./configurations/Cygnus/agent.conf:/opt/apache-flume/conf/agent.conf:ro
+    environment:
+      - CYGNUS_MYSQL_USER=root
+      - CYGNUS_MYSQL_PASS=mysql
+      - CYGNUS_MONGO_HOSTS=sthmongo:27017
+      - CYGNUS_MONGO_USER=
+      - CYGNUS_MONGO_PASS=
+    logging:
+      options:
+        max-size: 50m
+
+
+
+  fiware-sth-comet:
+    image: telefonicaiot/fiware-sth-comet:latest #2.2.0-next worked
+    hostname: comet
+    container_name: comet
+    restart: always
+    links:
+      - mongo
+    expose:
+      - "8666"
+    ports:
+      - "9005:8666"
+    environment:
+      - STH_HOST=0.0.0.0
+      - DB_URI=sthmongo:27017
+    logging:
+      options:
+        max-size: 50m
+
+
+  ########################### CustomModule ################################
+
+
+  fiwareaccumulator:
+    image: jmsfernandes/fiware-accumulator:latest
+    hostname: fiware-accumulator
+    container_name: fiware-accumulator
+    #restart: always
+    expose:
+      - '80'
+      - '443'
+    #environment:
+    #- ASPNETCORE_URLS=https://+;http://+ # if we want https support
+    ports:
+      - "80:80"
+      - "9008:443"
+    logging:
+      options:
+        max-size: 50m
+
+  ############################# Security GEs ###############################
+
+
+
+volumes:
+  mysql_db: {}
+  mongo_db: {}
