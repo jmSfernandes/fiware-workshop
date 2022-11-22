@@ -3,9 +3,6 @@ version: "2.0"
 services:
 
   ########################### DATABASES #############################
-
-
-
   mongo:
     image: mongo:latest
     hostname: sthmongo
@@ -24,12 +21,13 @@ services:
   mysql:
     image: mysql:5.7
     hostname: mysql
+    platform: linux/amd64 ## required for Apple M1/M2
     container_name: mysql
     restart: always
     expose:
       - "3306"
-    ports:
-      - "3306:3306"
+    #ports:
+    #  - "3306:3306"
     volumes:
       - mysql_db:/var/lib/mysql
     environment:

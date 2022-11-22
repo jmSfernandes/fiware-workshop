@@ -1,7 +1,8 @@
 
 
   nginx-orion:
-    image: nginx
+    image: nginx #windows and linux #comment this line if you have an Arm-based mac...
+    #image: arm64v8/nginx:latest ## required for Apple M1/M2 #uncomment this line if you have an Arm-based mac...
     container_name: nginx
     hostname: nginx
     volumes:

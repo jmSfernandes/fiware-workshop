@@ -1,3 +1,4 @@
-/certs/
+/certs/fullchain.pem
+/certs/privkey.pem
 /venv/
 /.idea/
